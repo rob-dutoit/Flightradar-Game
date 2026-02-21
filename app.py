@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import requests
 
-#test change for github
 
 app = Flask(__name__)
 
