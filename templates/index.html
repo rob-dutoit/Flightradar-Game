@@ -8,11 +8,25 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-    <style>
-        body { margin: 0; font-family: Arial; }
-        #map { height: 90vh; }
-        #controls { padding: 10px; }
-    </style>
+<style>
+    body { 
+        margin: 0; 
+        font-family: Arial; 
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    #controls { padding: 10px; }
+
+    #map {
+        height: 600px;
+        width: 600px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 4px solid black;
+    }
+</style>
 </head>
 <body>
 
