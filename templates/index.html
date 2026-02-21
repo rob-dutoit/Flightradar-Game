@@ -24,8 +24,9 @@
         width: 600px;
         border-radius: 50%;
         overflow: hidden;
-        border: 4px solid black;
+        border: 0px solid rgba(104, 214, 247, 0.655);
     }
+
 </style>
 </head>
 <body>
@@ -41,8 +42,10 @@
     const map = L.map('map').setView([20, 0], 2);
 
     // OpenStreetMap tiles (free)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+    subdomains: 'abcd',
+    maxZoom: 20
     }).addTo(map);
 
     let marker;
@@ -58,7 +61,7 @@
                     return;
                 }
 
-                map.setView([data.lat, data.lon], 10);
+                map.setView([data.lat, data.lon], 9);
 
                 if (marker) {
                     marker.remove();
