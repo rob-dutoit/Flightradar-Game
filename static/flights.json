@@ -1,8 +1,8 @@
 [
-  {"flight_no":"CUNTAS1","lat":-19.142325,"long":146.681766,"deparuture":"TSV","arrival":"SYD"},
-  {"flight_no":"CUNTAS2","lat":-19.181996,"long":146.975098,"deparuture":"TSV","arrival":"MEL"},
-  {"flight_no":"CUNTAS3","lat":-19.275357,"long":146.970978,"deparuture":"TSV","arrival":"BNE"},
-  {"flight_no":"CUNTAS4","lat":-19.364778,"long":146.859741,"deparuture":"ADL","arrival":"TSV"},
-  {"flight_no":"CUNTAS5","lat":-19.36996,"long":146.701813,"deparuture":"HBA","arrival":"TSV"},
-  {"flight_no":"CUNTAS5","lat":-19.235167,"long":146.56723,"deparuture":"PER","arrival":"TSV"}
+  {"flight_no":"CUNTAS1","lat":-19.142325,"long":146.681766,"deparuture":"TSV","arrival":"SYD","track":40},
+  {"flight_no":"CUNTAS2","lat":-19.181996,"long":146.975098,"deparuture":"TSV","arrival":"MEL","track":100},
+  {"flight_no":"CUNTAS3","lat":-19.275357,"long":146.970978,"deparuture":"TSV","arrival":"BNE","track":180},
+  {"flight_no":"CUNTAS4","lat":-19.364778,"long":146.859741,"deparuture":"ADL","arrival":"TSV","track":240},
+  {"flight_no":"CUNTAS5","lat":-19.36996,"long":146.701813,"deparuture":"HBA","arrival":"TSV","track":300},
+  {"flight_no":"CUNTAS6","lat":-19.235167,"long":146.56723,"deparuture":"PER","arrival":"TSV","track":360}
 ]
