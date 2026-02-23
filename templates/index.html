@@ -48,28 +48,52 @@
     maxZoom: 20
     }).addTo(map);
 
+    //Create custom plane icon
+const planeIcon = L.icon({
+    iconUrl: "/static/plane.png",
+    iconSize: [30, 30],     // size of icon
+    iconAnchor: [15, 15],   // center point of icon
+    popupAnchor: [0, -15]   // where popup opens from
+});
+
+    // Load flights
+fetch("/static/flights.json")
+    .then(res => res.json())
+    .then(flights => {
+
+        flights.forEach(flight => {
+
+            // Add marker
+            L.marker([flight.lat, flight.long], { icon: planeIcon })
+    .addTo(map)
+    .bindPopup(`
+        <b>${flight.flight_no}</b><br>
+        ${flight.deparuture} → ${flight.arrival}
+    `);
+
+        });
+
+    });
+
+    
+
     let marker;
 
-    function searchCity() {
-        const city = document.getElementById("city").value;
+function searchCity() {
+    const city = document.getElementById("city").value;
 
-        fetch(`/geocode?city=${city}`)
-            .then(res => res.json())
-            .then(data => {
-                if (!data.lat) {
-                    alert("City not found");
-                    return;
-                }
+    fetch(`/geocode?city=${city}`)
+        .then(res => res.json())
+        .then(data => {
+            if (!data.lat) {
+                alert("City not found");
+                return;
+            }
 
-                map.setView([data.lat, data.lon], 9);
-
-                if (marker) {
-                    marker.remove();
-                }
-
-                marker = L.marker([data.lat, data.lon]).addTo(map);
-            });
-    }
+            // Pan/zoom to the city WITHOUT adding a marker
+            map.setView([data.lat, data.lon], 9);
+        });
+}
 </script>
 
 </body>
