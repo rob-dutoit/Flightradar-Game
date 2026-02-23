@@ -1,112 +1,187 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8" />
     <title>Flask Leaflet Example</title>
 
     <!-- Leaflet CSS & JS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://rawcdn.githack.com/bbecquet/Leaflet.RotatedMarker/master/leaflet.rotatedMarker.js"></script>
 
-<style>
-    body { 
-        margin: 0; 
-        font-family: Arial; 
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-    #controls { padding: 10px; }
+        #header-airport {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 15px;
+        }
 
-    #map {
-        height: 600px;
-        width: 600px;
-        border-radius: 50%;
-        overflow: hidden;
-        border: 0px solid rgba(104, 214, 247, 0.655);
-    }
+        #controls {
+            padding: 10px;
+        }
 
-</style>
+        #cumulative-count {
+            margin: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        #map {
+            height: 600px;
+            width: 600px;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+
+        button {
+            cursor: pointer;
+        }
+    </style>
 </head>
+
 <body>
 
-<div id="controls">
-    <input type="text" id="city" placeholder="Enter a city">
-    <button onclick="searchCity()">Search</button>
-</div>
+    <!-- Loaded airport display -->
+    <div id="header-airport">
+        Fly me:
+    </div>
 
-<div id="map"></div>
+    <div id="map"></div>
 
-<script>
-    const map = L.map('map').setView([20, 0], 2);
+    <script>
+        const map = L.map('map');
 
-    // OpenStreetMap tiles (free)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-    subdomains: 'abcd',
-    maxZoom: 20
-    }).addTo(map);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
 
-    //Create custom plane icon
-const planeIcon = L.icon({
-    iconUrl: "/static/plane.png",
-    iconSize: [30, 30],     // size of icon
-    iconAnchor: [15, 15],   // center point of icon
-    popupAnchor: [0, -15]   // where popup opens from
-});
+        let airports = {};
+        const defaultAirportCode = "TSV"; // default airport
 
-    // Load flights
-fetch("/static/flights.json")
-    .then(res => res.json())
-    .then(flights => {
+        fetch("/static/airports.json")
+            .then(res => res.json())
+            .then(data => {
+                airports = data;
 
-        const bounds = [];
+                if (airports[defaultAirportCode]) {
+                    map.setView(airports[defaultAirportCode], 9);
 
-        flights.forEach(flight => {
+                    // Update header display
+                    document.getElementById("header-airport").innerText =
+                        `Fly me: ${defaultAirportCode}`;
+                }
+            });
 
-            const coords = [flight.lat, flight.long];
-            bounds.push(coords);
-
-            // Add rotated plane marker
-            L.marker(coords, { 
-                icon: planeIcon,
-                rotationAngle: flight.track // rotate according to JSON
-            })
-            .addTo(map)
-            .bindPopup(`
-                <b>${flight.flight_no}</b><br>
-                ${flight.deparuture} → ${flight.arrival}<br>
-                Track: ${flight.track}°
-            `);
-
+        const planeIcon = L.icon({
+            iconUrl: "/static/plane.png",
+            iconSize: [30, 30],
+            iconAnchor: [15, 15],
+            popupAnchor: [0, -15]
         });
 
-        ;
+        let flightButtonClicks = {};
+        let totalClicks = 0;
 
-    });
+        function zoomToAirport(code) {
+            const coords = airports[code];
+            if (!coords) return;
+            map.setView(coords, 9);
+        }
 
-    
+        function trackClick(flightNo, type, airport) {
+            flightButtonClicks[flightNo][type]++;
+            totalClicks++;
 
-    let marker;
+            document.getElementById('cumulative-count').innerText =
+                `Flights: ${totalClicks}`;
 
-function searchCity() {
-    const city = document.getElementById("city").value;
+            zoomToAirport(airport);
 
-    fetch(`/geocode?city=${city}`)
-        .then(res => res.json())
-        .then(data => {
-            if (!data.lat) {
-                alert("City not found");
-                return;
+            const flight = flights.find(f => f.flight_no === flightNo);
+            if (flight && flight.marker) {
+                flight.marker.setPopupContent(getPopupHTML(flight));
+                flight.marker.openPopup();
             }
+        }
 
-            // Pan/zoom to the city WITHOUT adding a marker
-            map.setView([data.lat, data.lon], 9);
-        });
-}
-</script>
+        let flights = [];
+
+        fetch("/static/flights.json")
+            .then(res => res.json())
+            .then(data => {
+                flights = data;
+
+                flights.forEach(flight => {
+
+                    flightButtonClicks[flight.flight_no] = {
+                        departure: 0,
+                        arrival: 0
+                    };
+
+                    const marker = L.marker([flight.lat, flight.long], {
+                        icon: planeIcon,
+                        rotationAngle: flight.track
+                    }).addTo(map);
+
+                    flight.marker = marker;
+
+                    marker.bindPopup(getPopupHTML(flight));
+                });
+            });
+
+        function getPopupHTML(f) {
+            return `
+            <div style="text-align: center;">
+                <b>${f.flight_no}</b><br>
+                <div style="display: flex; justify-content: center; gap: 5px; align-items: center;">
+                    <button onclick="trackClick('${f.flight_no}', 'departure', '${f.deparuture}')">
+                        ${f.deparuture}
+                    </button>
+                    →
+                    <button onclick="trackClick('${f.flight_no}', 'arrival', '${f.arrival}')">
+                        ${f.arrival}
+                    </button>
+                </div>
+                <div style="margin-top: 5px;">
+                    Track: ${f.track}°<br>
+                    Departure clicked: ${flightButtonClicks[f.flight_no].departure}<br>
+                    Arrival clicked: ${flightButtonClicks[f.flight_no].arrival}
+                </div>
+            </div>
+            `;
+        }
+
+        function searchCity() {
+            const city = document.getElementById("city").value;
+
+            fetch(`/geocode?city=${city}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.lat) {
+                        alert("City not found");
+                        return;
+                    }
+                    map.setView([data.lat, data.lon], 9);
+                });
+        }
+    </script>
+
+    <!-- Cumulative counter display -->
+    <div id="cumulative-count">
+        Flights: 0
+    </div>
 
 </body>
+
 </html>
