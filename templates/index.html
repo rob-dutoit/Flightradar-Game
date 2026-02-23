@@ -7,6 +7,7 @@
     <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://rawcdn.githack.com/bbecquet/Leaflet.RotatedMarker/master/leaflet.rotatedMarker.js"></script>
 
 <style>
     body { 
@@ -61,17 +62,28 @@ fetch("/static/flights.json")
     .then(res => res.json())
     .then(flights => {
 
+        const bounds = [];
+
         flights.forEach(flight => {
 
-            // Add marker
-            L.marker([flight.lat, flight.long], { icon: planeIcon })
-    .addTo(map)
-    .bindPopup(`
-        <b>${flight.flight_no}</b><br>
-        ${flight.deparuture} → ${flight.arrival}
-    `);
+            const coords = [flight.lat, flight.long];
+            bounds.push(coords);
+
+            // Add rotated plane marker
+            L.marker(coords, { 
+                icon: planeIcon,
+                rotationAngle: flight.track // rotate according to JSON
+            })
+            .addTo(map)
+            .bindPopup(`
+                <b>${flight.flight_no}</b><br>
+                ${flight.deparuture} → ${flight.arrival}<br>
+                Track: ${flight.track}°
+            `);
 
         });
+
+        map.fitBounds(bounds);
 
     });
 
