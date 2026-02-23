@@ -1,10 +1,21 @@
 import csv
 import json
 
-# Read CSV and convert to JSON
-with open('flights_test.csv', 'r') as csvfile:
-    reader = csv.DictReader(csvfile)
-    data = [row for row in reader]
+input_file = "flightradar24_airports.csv"
+output_file = "airport_coords.json"
 
-with open('flights_test.json', 'w') as jsonfile:
-    json.dump(data, jsonfile, indent=4)
+airport_coords = {}
+
+with open(input_file, newline='', encoding='utf-8') as csvfile:
+    reader = csv.DictReader(csvfile)
+    
+    for row in reader:
+        iata = row["iata"]
+        lat = float(row["lat"])
+        lon = float(row["lon"])
+        airport_coords[iata] = [lat, lon]
+
+with open(output_file, "w", encoding="utf-8") as jsonfile:
+    json.dump(airport_coords, jsonfile, indent=2)
+
+print("Done. Created airport_coords.json")

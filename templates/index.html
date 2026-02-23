@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>Flask Leaflet Example</title>
+    <title>Flight Tracker</title>
 
     <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -23,10 +23,6 @@
             font-size: 20px;
             font-weight: bold;
             margin-top: 15px;
-        }
-
-        #controls {
-            padding: 10px;
         }
 
         #cumulative-count {
@@ -50,11 +46,17 @@
 
 <body>
 
-    <!-- Loaded airport display -->
+    <!-- Header -->
     <div id="header-airport">
         Fly me:
     </div>
 
+    <!-- Cumulative counter -->
+    <div id="cumulative-count">
+        Total Clicks: 0
+    </div>
+
+    <!-- Map -->
     <div id="map"></div>
 
     <script>
@@ -67,21 +69,33 @@
         }).addTo(map);
 
         let airports = {};
-        const defaultAirportCode = "TSV"; // default airport
+        const defaultAirportCode = "TSV";
 
         fetch("/static/airports.json")
-            .then(res => res.json())
-            .then(data => {
-                airports = data;
+    .then(res => res.json())
+    .then(data => {
+        airports = data;
 
-                if (airports[defaultAirportCode]) {
-                    map.setView(airports[defaultAirportCode], 9);
+        // Loop through all airports in JSON
+        Object.keys(airports).forEach(code => {
 
-                    // Update header display
-                    document.getElementById("header-airport").innerText =
-                        `Fly me: ${defaultAirportCode}`;
-                }
-            });
+            const coords = airports[code];
+
+            // Add airport marker
+            L.marker(coords, {
+                icon: airportIcon
+            })
+            .addTo(map)
+            .bindPopup(`<b>${code} Airport</b>`);
+        });
+
+        // Set default view
+        if (airports[defaultAirportCode]) {
+            map.setView(airports[defaultAirportCode], 9);
+            document.getElementById("header-airport").innerText =
+                `Fly me: ${defaultAirportCode}`;
+        }
+    });
 
         const planeIcon = L.icon({
             iconUrl: "/static/plane.png",
@@ -90,21 +104,39 @@
             popupAnchor: [0, -15]
         });
 
+        const airportIcon = L.icon({
+    iconUrl: "/static/airport.png",   // put airport.png in /static/
+    iconSize: [25, 25],
+    iconAnchor: [12, 12],
+    popupAnchor: [0, -10]
+});
+
         let flightButtonClicks = {};
         let totalClicks = 0;
+        let flights = [];
 
         function zoomToAirport(code) {
             const coords = airports[code];
-            if (!coords) return;
-            map.setView(coords, 9);
+
+            if (!coords) {
+                console.log("Airport not found:", code);
+                return;
+            }
+
+            map.flyTo(coords, 9);
+
+            // Update header
+            document.getElementById("header-airport").innerText =
+                `Fly me: ${code}`;
         }
 
         function trackClick(flightNo, type, airport) {
+
             flightButtonClicks[flightNo][type]++;
             totalClicks++;
 
             document.getElementById('cumulative-count').innerText =
-                `Flights: ${totalClicks}`;
+                `Total Clicks: ${totalClicks}`;
 
             zoomToAirport(airport);
 
@@ -115,11 +147,10 @@
             }
         }
 
-        let flights = [];
-
         fetch("/static/flights.json")
             .then(res => res.json())
             .then(data => {
+
                 flights = data;
 
                 flights.forEach(flight => {
@@ -145,8 +176,8 @@
             <div style="text-align: center;">
                 <b>${f.flight_no}</b><br>
                 <div style="display: flex; justify-content: center; gap: 5px; align-items: center;">
-                    <button onclick="trackClick('${f.flight_no}', 'departure', '${f.deparuture}')">
-                        ${f.deparuture}
+                    <button onclick="trackClick('${f.flight_no}', 'departure', '${f.departure}')">
+                        ${f.departure}
                     </button>
                     →
                     <button onclick="trackClick('${f.flight_no}', 'arrival', '${f.arrival}')">
@@ -162,25 +193,7 @@
             `;
         }
 
-        function searchCity() {
-            const city = document.getElementById("city").value;
-
-            fetch(`/geocode?city=${city}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (!data.lat) {
-                        alert("City not found");
-                        return;
-                    }
-                    map.setView([data.lat, data.lon], 9);
-                });
-        }
     </script>
-
-    <!-- Cumulative counter display -->
-    <div id="cumulative-count">
-        Flights: 0
-    </div>
 
 </body>
 
