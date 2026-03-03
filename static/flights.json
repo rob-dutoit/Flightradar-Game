@@ -4,5 +4,9 @@
   {"flight_no":"CUNTAS3","lat":-19.275357,"long":146.970978,"departure":"TSV","arrival":"BNE","track":180},
   {"flight_no":"CUNTAS4","lat":-19.364778,"long":146.859741,"departure":"ADL","arrival":"TSV","track":240},
   {"flight_no":"CUNTAS5","lat":-19.36996,"long":146.701813,"departure":"HBA","arrival":"TSV","track":300},
-  {"flight_no":"CUNTAS5","lat":-19.235167,"long":146.56723,"departure":"PER","arrival":"TSV","track":360}
+  {"flight_no":"CUNTAS6","lat":-19.235167,"long":146.56723,"departure":"PER","arrival":"TSV","track":360},
+  {"flight_no":"CUNTAS7","lat":-27.374826,"long":152.972923,"departure":"TSV","arrival":"BNE","track":400}
+
+
+
 ]

@@ -7,6 +7,9 @@
 
     <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://rawcdn.githack.com/bbecquet/Leaflet.RotatedMarker/master/leaflet.rotatedMarker.js"></script>
 
@@ -37,6 +40,16 @@
             border-radius: 50%;
             overflow: hidden;
         }
+
+        #game-complete-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;       /* Above map and markers */
+    width: 800px;         /* adjust size as needed */
+    pointer-events: none; /* allow clicks to pass through */
+}
 
         button {
             cursor: pointer;
@@ -97,6 +110,20 @@
         }
     });
 
+    fetch("/static/game.json")
+    .then(res => res.json())
+    .then(data => {
+
+        gameStart = data.departure;
+        gameEnd = data.arrival;
+
+        if (airports[gameStart]) {
+            map.setView(airports[gameStart], 9);
+            document.getElementById("header-airport").innerText =
+    `Fly ${gameStart} → ${gameEnd}`;
+        }
+    });
+
         const planeIcon = L.icon({
             iconUrl: "/static/plane.png",
             iconSize: [30, 30],
@@ -114,38 +141,43 @@
         let flightButtonClicks = {};
         let totalClicks = 0;
         let flights = [];
+        let gameStart = null;
+        let gameEnd = null;
+        let gameActive = true;
 
         function zoomToAirport(code) {
-            const coords = airports[code];
+    const coords = airports[code];
+    if (!coords) return;
 
-            if (!coords) {
-                console.log("Airport not found:", code);
-                return;
-            }
+    map.flyTo(coords, 9);
 
-            map.flyTo(coords, 9);
+    if (code === gameEnd) {
+        gameActive = false;
 
-            // Update header
-            document.getElementById("header-airport").innerText =
-                `Fly me: ${code}`;
-        }
+        map.once("moveend", function () {
+            showGameOverlay(code); // overlay at destination
+        });
+    }
+}
 
         function trackClick(flightNo, type, airport) {
 
-            flightButtonClicks[flightNo][type]++;
-            totalClicks++;
+    if (!gameActive) return;   // 👈 STOP everything if game finished
 
-            document.getElementById('cumulative-count').innerText =
-                `Total Clicks: ${totalClicks}`;
+    flightButtonClicks[flightNo][type]++;
+    totalClicks++;
 
-            zoomToAirport(airport);
+    document.getElementById('cumulative-count').innerText =
+        `Total Clicks: ${totalClicks}`;
 
-            const flight = flights.find(f => f.flight_no === flightNo);
-            if (flight && flight.marker) {
-                flight.marker.setPopupContent(getPopupHTML(flight));
-                flight.marker.openPopup();
-            }
-        }
+    zoomToAirport(airport);
+
+    const flight = flights.find(f => f.flight_no === flightNo);
+    if (flight && flight.marker) {
+        flight.marker.setPopupContent(getPopupHTML(flight));
+        flight.marker.openPopup();
+    }
+}
 
         fetch("/static/flights.json")
             .then(res => res.json())
@@ -192,6 +224,39 @@
             </div>
             `;
         }
+
+        function showGameOverlay(airportCode) {
+    const coords = airports[airportCode];
+    if (!coords) return;
+
+    // Create a DivIcon with the circle PNG and the click count
+    const overlayHtml = `
+        <div style="position: relative; text-align: center;">
+            <img src="/static/core.png" style="width:100px; height:100px;" />
+            <div style="
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 18px;
+                font-weight: bold;
+                color: white;
+            ">
+                ${totalClicks}
+            </div>
+        </div>
+    `;
+
+    const overlayIcon = L.divIcon({
+        html: overlayHtml,
+        className: '', // remove default styles
+        iconSize: [100, 100],
+        iconAnchor: [50, 50], // center of the icon
+    });
+
+    // Add overlay marker to map
+    L.marker(coords, { icon: overlayIcon }).addTo(map);
+}
 
     </script>
 
