@@ -47,14 +47,8 @@
 
 <body>
 
-    <div id="header-airport">
-        Fly me:
-    </div>
-
-    <div id="cumulative-count">
-        Total Clicks: 0
-    </div>
-
+    <div id="header-airport">Fly me:</div>
+    <div id="cumulative-count">Total Clicks: 0</div>
     <div id="map"></div>
 
     <script>
@@ -91,17 +85,16 @@
 
         const defaultAirportCode = "TSV";
 
+        // Load airports
         fetch("/static/airports.json")
             .then(res => res.json())
             .then(data => {
                 airports = data;
-
                 Object.keys(airports).forEach(code => {
                     L.marker(airports[code], { icon: airportIcon })
                         .addTo(map)
                         .bindPopup(`<b>${code} Airport</b>`);
                 });
-
                 if (airports[defaultAirportCode]) {
                     map.setView(airports[defaultAirportCode], 9);
                     document.getElementById("header-airport").innerText =
@@ -109,87 +102,31 @@
                 }
             });
 
-        /* ===============================
-           UPDATED FLIGHT LOADER FUNCTION
-           =============================== */
-
+        // Function to load flights and remove old markers
         function loadFlights() {
-
             // Remove old markers
             flightMarkers.forEach(marker => map.removeLayer(marker));
             flightMarkers = [];
 
-            // Cache-busting timestamp
-            fetch("/static/flights.json?ts=" + new Date().getTime())
-                .then(res => res.json())
-                .then(data => {
+            flights.forEach(flight => {
+                flightButtonClicks[flight.flight_no] = flightButtonClicks[flight.flight_no] || {
+                    departure: 0,
+                    arrival: 0
+                };
 
-                    flights = data;
+                const marker = L.marker([flight.lat, flight.long], {
+                    icon: planeIcon,
+                    rotationAngle: flight.track
+                }).addTo(map);
 
-                    flights.forEach(flight => {
+                flight.marker = marker;
+                flightMarkers.push(marker);
 
-                        flightButtonClicks[flight.flight_no] = {
-                            departure: 0,
-                            arrival: 0
-                        };
-
-                        const marker = L.marker([flight.lat, flight.long], {
-                            icon: planeIcon,
-                            rotationAngle: flight.track
-                        }).addTo(map);
-
-                        flight.marker = marker;
-                        flightMarkers.push(marker);
-
-                        marker.bindPopup(getPopupHTML(flight));
-                    });
-                });
+                marker.bindPopup(getPopupHTML(flight));
+            });
         }
 
-        // Initial load
-        loadFlights();
-
-        /* ===============================
-           UPDATED AIRPORT ZOOM FUNCTION
-           =============================== */
-
-        function zoomToAirport(code) {
-            const coords = airports[code];
-            if (!coords) return;
-
-            map.flyTo(coords, 9);
-
-            // Call backend to rerun sandbox_fr24_api
-            fetch(`/update_flights/${code}`)
-                .then(res => res.json())
-                .then(() => {
-                    loadFlights();  // reload fresh flights
-                });
-
-            if (code === gameEnd) {
-                gameActive = false;
-            }
-        }
-
-        function trackClick(flightNo, type, airport) {
-
-            if (!gameActive) return;
-
-            flightButtonClicks[flightNo][type]++;
-            totalClicks++;
-
-            document.getElementById('cumulative-count').innerText =
-                `Total Clicks: ${totalClicks}`;
-
-            zoomToAirport(airport);
-
-            const flight = flights.find(f => f.flight_no === flightNo);
-            if (flight && flight.marker) {
-                flight.marker.setPopupContent(getPopupHTML(flight));
-                flight.marker.openPopup();
-            }
-        }
-
+        // Function to generate popup HTML
         function getPopupHTML(f) {
             return `
             <div style="text-align: center;">
@@ -212,6 +149,52 @@
             `;
         }
 
+        // Track flight button clicks
+        function trackClick(flightNo, type, airport) {
+            if (!gameActive) return;
+
+            flightButtonClicks[flightNo][type]++;
+            totalClicks++;
+
+            document.getElementById('cumulative-count').innerText =
+                `Total Clicks: ${totalClicks}`;
+
+            zoomToAirport(airport);
+
+            const flight = flights.find(f => f.flight_no === flightNo);
+            if (flight && flight.marker) {
+                flight.marker.setPopupContent(getPopupHTML(flight));
+                flight.marker.openPopup();
+            }
+        }
+
+        // Zoom to an airport and refresh flights
+        function zoomToAirport(code) {
+    const coords = airports[code];
+    if (!coords) return;
+
+    map.flyTo(coords, 9);
+
+    // Fetch updated flights for this airport
+    fetch(`/update_flights/${code}`)
+        .then(res => res.json())
+        .then(data => {
+            flights = data.flights;  // replace old flights
+            loadFlights();           // redraw markers
+        });
+
+    if (code === gameEnd) {
+        gameActive = false;
+    }
+}
+
+        // Start a new game
+        fetch("/start_game")
+            .then(res => res.json())
+            .then(data => {
+                flights = data.flights; // populate flights array
+                loadFlights();          // draw markers
+            });
     </script>
 
 </body>
