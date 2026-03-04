@@ -7,9 +7,7 @@
 
     <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-    
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://rawcdn.githack.com/bbecquet/Leaflet.RotatedMarker/master/leaflet.rotatedMarker.js"></script>
 
@@ -41,16 +39,6 @@
             overflow: hidden;
         }
 
-        #game-complete-overlay {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 1000;       /* Above map and markers */
-    width: 800px;         /* adjust size as needed */
-    pointer-events: none; /* allow clicks to pass through */
-}
-
         button {
             cursor: pointer;
         }
@@ -59,17 +47,14 @@
 
 <body>
 
-    <!-- Header -->
     <div id="header-airport">
         Fly me:
     </div>
 
-    <!-- Cumulative counter -->
     <div id="cumulative-count">
         Total Clicks: 0
     </div>
 
-    <!-- Map -->
     <div id="map"></div>
 
     <script>
@@ -81,49 +66,6 @@
             maxZoom: 20
         }).addTo(map);
 
-        let airports = {};
-        const defaultAirportCode = "TSV";
-
-        fetch("/static/airports.json")
-    .then(res => res.json())
-    .then(data => {
-        airports = data;
-
-        // Loop through all airports in JSON
-        Object.keys(airports).forEach(code => {
-
-            const coords = airports[code];
-
-            // Add airport marker
-            L.marker(coords, {
-                icon: airportIcon
-            })
-            .addTo(map)
-            .bindPopup(`<b>${code} Airport</b>`);
-        });
-
-        // Set default view
-        if (airports[defaultAirportCode]) {
-            map.setView(airports[defaultAirportCode], 9);
-            document.getElementById("header-airport").innerText =
-                `Fly me: ${defaultAirportCode}`;
-        }
-    });
-
-    fetch("/static/game.json")
-    .then(res => res.json())
-    .then(data => {
-
-        gameStart = data.departure;
-        gameEnd = data.arrival;
-
-        if (airports[gameStart]) {
-            map.setView(airports[gameStart], 9);
-            document.getElementById("header-airport").innerText =
-    `Fly ${gameStart} → ${gameEnd}`;
-        }
-    });
-
         const planeIcon = L.icon({
             iconUrl: "/static/plane.png",
             iconSize: [30, 30],
@@ -132,76 +74,121 @@
         });
 
         const airportIcon = L.icon({
-    iconUrl: "/static/airport.png",   // put airport.png in /static/
-    iconSize: [25, 25],
-    iconAnchor: [12, 12],
-    popupAnchor: [0, -10]
-});
+            iconUrl: "/static/airport.png",
+            iconSize: [25, 25],
+            iconAnchor: [12, 12],
+            popupAnchor: [0, -10]
+        });
 
+        let airports = {};
+        let flights = [];
+        let flightMarkers = [];
         let flightButtonClicks = {};
         let totalClicks = 0;
-        let flights = [];
         let gameStart = null;
         let gameEnd = null;
         let gameActive = true;
 
+        const defaultAirportCode = "TSV";
+
+        fetch("/static/airports.json")
+            .then(res => res.json())
+            .then(data => {
+                airports = data;
+
+                Object.keys(airports).forEach(code => {
+                    L.marker(airports[code], { icon: airportIcon })
+                        .addTo(map)
+                        .bindPopup(`<b>${code} Airport</b>`);
+                });
+
+                if (airports[defaultAirportCode]) {
+                    map.setView(airports[defaultAirportCode], 9);
+                    document.getElementById("header-airport").innerText =
+                        `Fly me: ${defaultAirportCode}`;
+                }
+            });
+
+        /* ===============================
+           UPDATED FLIGHT LOADER FUNCTION
+           =============================== */
+
+        function loadFlights() {
+
+            // Remove old markers
+            flightMarkers.forEach(marker => map.removeLayer(marker));
+            flightMarkers = [];
+
+            // Cache-busting timestamp
+            fetch("/static/flights.json?ts=" + new Date().getTime())
+                .then(res => res.json())
+                .then(data => {
+
+                    flights = data;
+
+                    flights.forEach(flight => {
+
+                        flightButtonClicks[flight.flight_no] = {
+                            departure: 0,
+                            arrival: 0
+                        };
+
+                        const marker = L.marker([flight.lat, flight.long], {
+                            icon: planeIcon,
+                            rotationAngle: flight.track
+                        }).addTo(map);
+
+                        flight.marker = marker;
+                        flightMarkers.push(marker);
+
+                        marker.bindPopup(getPopupHTML(flight));
+                    });
+                });
+        }
+
+        // Initial load
+        loadFlights();
+
+        /* ===============================
+           UPDATED AIRPORT ZOOM FUNCTION
+           =============================== */
+
         function zoomToAirport(code) {
-    const coords = airports[code];
-    if (!coords) return;
+            const coords = airports[code];
+            if (!coords) return;
 
-    map.flyTo(coords, 9);
+            map.flyTo(coords, 9);
 
-    if (code === gameEnd) {
-        gameActive = false;
+            // Call backend to rerun sandbox_fr24_api
+            fetch(`/update_flights/${code}`)
+                .then(res => res.json())
+                .then(() => {
+                    loadFlights();  // reload fresh flights
+                });
 
-        map.once("moveend", function () {
-            showGameOverlay(code); // overlay at destination
-        });
-    }
-}
+            if (code === gameEnd) {
+                gameActive = false;
+            }
+        }
 
         function trackClick(flightNo, type, airport) {
 
-    if (!gameActive) return;   // 👈 STOP everything if game finished
+            if (!gameActive) return;
 
-    flightButtonClicks[flightNo][type]++;
-    totalClicks++;
+            flightButtonClicks[flightNo][type]++;
+            totalClicks++;
 
-    document.getElementById('cumulative-count').innerText =
-        `Total Clicks: ${totalClicks}`;
+            document.getElementById('cumulative-count').innerText =
+                `Total Clicks: ${totalClicks}`;
 
-    zoomToAirport(airport);
+            zoomToAirport(airport);
 
-    const flight = flights.find(f => f.flight_no === flightNo);
-    if (flight && flight.marker) {
-        flight.marker.setPopupContent(getPopupHTML(flight));
-        flight.marker.openPopup();
-    }
-}
-
-        fetch("/static/flights.json")
-            .then(res => res.json())
-            .then(data => {
-
-                flights = data;
-
-                flights.forEach(flight => {
-
-                    flightButtonClicks[flight.flight_no] = {
-                        departure: 0,
-                        arrival: 0
-                    };
-
-                    const marker = L.marker([flight.lat, flight.long], {
-                        icon: planeIcon,
-                        rotationAngle: flight.track
-                    }).addTo(map);
-
-                    flight.marker = marker;
-
-                    marker.bindPopup(getPopupHTML(flight));
-                });
-            });
+            const flight = flights.find(f => f.flight_no === flightNo);
+            if (flight && flight.marker) {
+                flight.marker.setPopupContent(getPopupHTML(flight));
+                flight.marker.openPopup();
+            }
+        }
 
         function getPopupHTML(f) {
             return `
@@ -225,41 +212,7 @@
             `;
         }
 
-        function showGameOverlay(airportCode) {
-    const coords = airports[airportCode];
-    if (!coords) return;
-
-    // Create a DivIcon with the circle PNG and the click count
-    const overlayHtml = `
-        <div style="position: relative; text-align: center;">
-            <img src="/static/core.png" style="width:100px; height:100px;" />
-            <div style="
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                font-size: 18px;
-                font-weight: bold;
-                color: white;
-            ">
-                ${totalClicks}
-            </div>
-        </div>
-    `;
-
-    const overlayIcon = L.divIcon({
-        html: overlayHtml,
-        className: '', // remove default styles
-        iconSize: [100, 100],
-        iconAnchor: [50, 50], // center of the icon
-    });
-
-    // Add overlay marker to map
-    L.marker(coords, { icon: overlayIcon }).addTo(map);
-}
-
     </script>
 
 </body>
-
 </html>

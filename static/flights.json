@@ -1,12 +1,162 @@
 [
-  {"flight_no":"CUNTAS1","lat":-19.142325,"long":146.681766,"departure":"TSV","arrival":"SYD","track":45},
-  {"flight_no":"CUNTAS2","lat":-19.181996,"long":146.975098,"departure":"TSV","arrival":"MEL","track":100},
-  {"flight_no":"CUNTAS3","lat":-19.275357,"long":146.970978,"departure":"TSV","arrival":"BNE","track":180},
-  {"flight_no":"CUNTAS4","lat":-19.364778,"long":146.859741,"departure":"ADL","arrival":"TSV","track":240},
-  {"flight_no":"CUNTAS5","lat":-19.36996,"long":146.701813,"departure":"HBA","arrival":"TSV","track":300},
-  {"flight_no":"CUNTAS6","lat":-19.235167,"long":146.56723,"departure":"PER","arrival":"TSV","track":360},
-  {"flight_no":"CUNTAS7","lat":-27.374826,"long":152.972923,"departure":"TSV","arrival":"BNE","track":400}
-
-
-
+    {
+        "flight_no": "ZKGCK",
+        "lat": -37.63911,
+        "long": 175.76518,
+        "departure": "MTA",
+        "arrival": "UNK",
+        "track": 221
+    },
+    {
+        "flight_no": "ANZ175",
+        "lat": -37.23468,
+        "long": 174.01041,
+        "departure": "AKL",
+        "arrival": "PER",
+        "track": 249
+    },
+    {
+        "flight_no": "CVA704",
+        "lat": -37.17708,
+        "long": 174.72478,
+        "departure": "AKL",
+        "arrival": "WAG",
+        "track": 189
+    },
+    {
+        "flight_no": "QFA153",
+        "lat": -36.89703,
+        "long": 174.77618,
+        "departure": "MEL",
+        "arrival": "AKL",
+        "track": 91
+    },
+    {
+        "flight_no": "ANZ432",
+        "lat": -37.50039,
+        "long": 174.83577,
+        "departure": "WLG",
+        "arrival": "AKL",
+        "track": 13
+    },
+    {
+        "flight_no": "MAS144",
+        "lat": -36.67451,
+        "long": 173.91449,
+        "departure": "AKL",
+        "arrival": "KUL",
+        "track": 295
+    },
+    {
+        "flight_no": "UNKNOWN",
+        "lat": -37.40735,
+        "long": 175.6362,
+        "departure": "UNK",
+        "arrival": "UNK",
+        "track": 143
+    },
+    {
+        "flight_no": "SKL1",
+        "lat": -37.12907,
+        "long": 175.0298,
+        "departure": "NPL",
+        "arrival": "UNK",
+        "track": 12
+    },
+    {
+        "flight_no": "ZKGDR",
+        "lat": -37.83362,
+        "long": 175.84074,
+        "departure": "MTA",
+        "arrival": "UNK",
+        "track": 175
+    },
+    {
+        "flight_no": "ZKCBM",
+        "lat": -36.78369,
+        "long": 175.82542,
+        "departure": "AMZ",
+        "arrival": "UNK",
+        "track": 346
+    },
+    {
+        "flight_no": "ZKGSR",
+        "lat": -37.34962,
+        "long": 175.25671,
+        "departure": "AMZ",
+        "arrival": "UNK",
+        "track": 130
+    },
+    {
+        "flight_no": "ZKCTY",
+        "lat": -37.19371,
+        "long": 175.17975,
+        "departure": "AMZ",
+        "arrival": "UNK",
+        "track": 326
+    },
+    {
+        "flight_no": "UNKNOWN",
+        "lat": -36.9733,
+        "long": 175.46942,
+        "departure": "UNK",
+        "arrival": "UNK",
+        "track": 103
+    },
+    {
+        "flight_no": "ANZ481",
+        "lat": -37.03271,
+        "long": 174.70967,
+        "departure": "AKL",
+        "arrival": "WLG",
+        "track": 250
+    },
+    {
+        "flight_no": "ZKMIL",
+        "lat": -37.67198,
+        "long": 175.81683,
+        "departure": "AMZ",
+        "arrival": "UNK",
+        "track": 319
+    },
+    {
+        "flight_no": "ZKSWX",
+        "lat": -36.86243,
+        "long": 175.6161,
+        "departure": "AMZ",
+        "arrival": "UNK",
+        "track": 261
+    },
+    {
+        "flight_no": "GBA755",
+        "lat": -36.80731,
+        "long": 174.82355,
+        "departure": "AKL",
+        "arrival": "GBZ",
+        "track": 32
+    },
+    {
+        "flight_no": "ZKDPN",
+        "lat": -36.48848,
+        "long": 174.97392,
+        "departure": "UNK",
+        "arrival": "UNK",
+        "track": 56
+    },
+    {
+        "flight_no": "ZKIJL",
+        "lat": -36.38406,
+        "long": 174.65503,
+        "departure": "UNK",
+        "arrival": "UNK",
+        "track": 180
+    },
+    {
+        "flight_no": "ZKCGX",
+        "lat": -36.77771,
+        "long": 174.6098,
+        "departure": "UNK",
+        "arrival": "UNK",
+        "track": 323
+    }
 ]

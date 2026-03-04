@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import requests
+from sandbox_fr24_api import sandbox_fr24_api
 
 
 app = Flask(__name__)
@@ -32,6 +33,13 @@ def geocode():
     city = request.args.get("city")
     result = geocode_city(city)
     return jsonify(result or {})
+
+@app.route("/update_flights/<airport_code>")
+def update_flights(airport_code):
+
+    count = sandbox_fr24_api(airport_code)
+
+    return {"status": "success", "flights": count}
 
 if __name__ == "__main__":
     app.run(debug=True)
